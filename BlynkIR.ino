@@ -285,15 +285,19 @@ static void rmt_example_nec_tx_task() //void *pvParameters
   memset((void*) item, 0, size);
 
   nec_build_items(RMT_TX_CHANNEL, item);
+  Serial.println("DBG - rmt_build_items done");
 
   //To send data according to the waveform items.
   rmt_write_items(RMT_TX_CHANNEL, item, item_num, true);
+  Serial.println("DBG - rmt_write_items done");
 
   //Wait until sending is done.
   rmt_wait_tx_done(RMT_TX_CHANNEL);
+  Serial.println("DBG - tx done");
 
   //before we free the data, make sure sending is already done.
   free(item);
+  Serial.println("DBG - free(item) done");
   return;
 }
 
@@ -340,7 +344,7 @@ void clockDisplay()
   if (startHour == currentHour && startMin == currentMin && AC_ON == false) {
     digitalWrite(GPIO_LED, HIGH);
     led1.on();
-    rmt_example_nec_tx_task(); //sends IR start/stop command
+ //   rmt_example_nec_tx_task(); //sends IR start/stop command
     Serial.println("IR command sent");
     AC_ON = true;
   }
@@ -348,7 +352,7 @@ void clockDisplay()
   else if (stopHour == currentHour && stopMin == currentMin && AC_ON == true) {
     digitalWrite(GPIO_LED, LOW);
     led1.off();
-    rmt_example_nec_tx_task(); //sends IR start/stop command
+ //   rmt_example_nec_tx_task(); //sends IR start/stop command
     Serial.println("IR command sent");
     AC_ON = false;
   }
