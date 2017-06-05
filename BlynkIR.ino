@@ -1,37 +1,30 @@
 /*************************************************************
   Download latest Blynk library here:
     https://github.com/blynkkk/blynk-library/releases/latest
-
   Blynk is a platform with iOS and Android apps to control
   Arduino, Raspberry Pi and the likes over the Internet.
   You can easily build graphic interfaces for all your
   projects by simply dragging and dropping widgets.
-
     Downloads, docs, tutorials: http://www.blynk.cc
     Sketch generator:           http://examples.blynk.cc
     Blynk community:            http://community.blynk.cc
     Follow us:                  http://www.fb.com/blynkapp
                                 http://twitter.com/blynk_app
-
   Blynk library is licensed under MIT license
   This example code is in public domain.
-
  *************************************************************
-
   App project setup:
     Time input widget linked with V0 for Start time
     Time input widget linked with V1 for Stop time
     Value display linked to V3 to display the current time
     LED linked to V2 to display when AC is ON
     RTC widget 
-
   Program description:
     This Blynk app is used to control an AC unit with IR signal
     Works with a ESP32 dev board and IR LED
     The IR LED is connected to IO26 of the ESP32
     With the Blynk app you set the start and stop time
     and the program will send the start/stop IR command when the time comes
-
   Author
     L-A Boulanger
     
@@ -91,8 +84,9 @@ WidgetRTC rtc;
 WidgetLED led1(V2);
 
 String startTime, stopTime;
-int startHour, startMin;
-int stopHour, stopMin;
+int currentHour = 0, currentMin = 0;
+int startHour = 1, startMin = 1;
+int stopHour = 1, stopMin = 1;
 boolean AC_ON = false;
 
 //IR functions
@@ -285,19 +279,19 @@ static void rmt_example_nec_tx_task() //void *pvParameters
   memset((void*) item, 0, size);
 
   nec_build_items(RMT_TX_CHANNEL, item);
-  Serial.println("DBG - rmt_build_items done");
+  //Serial.println("DBG - rmt_build_items done");
 
   //To send data according to the waveform items.
   rmt_write_items(RMT_TX_CHANNEL, item, item_num, true);
-  Serial.println("DBG - rmt_write_items done");
+  //Serial.println("DBG - rmt_write_items done");
 
   //Wait until sending is done.
   rmt_wait_tx_done(RMT_TX_CHANNEL);
-  Serial.println("DBG - tx done");
+  //Serial.println("DBG - tx done");
 
   //before we free the data, make sure sending is already done.
   free(item);
-  Serial.println("DBG - free(item) done");
+  //Serial.println("DBG - free(item) done");
   return;
 }
 
@@ -327,8 +321,8 @@ void clockDisplay()
   // Please see Time library examples for details
 
   String currentTime = String(hour()) + ":" + minute();
-  int currentHour = hour();
-  int currentMin = minute();
+  currentHour = hour();
+  currentMin = minute();
   //String currentDate = String(day()) + " " + month() + " " + year();
   Serial.print("Current time: ");
   Serial.println(currentTime);
@@ -339,23 +333,6 @@ void clockDisplay()
   Blynk.virtualWrite(V3, currentTime);
   // Send date to the App
   //Blynk.virtualWrite(V2, currentDate);
-
-  //Checks if it's time to turn on or off the AC
-  if (startHour == currentHour && startMin == currentMin && AC_ON == false) {
-    digitalWrite(GPIO_LED, HIGH);
-    led1.on();
- //   rmt_example_nec_tx_task(); //sends IR start/stop command
-    Serial.println("IR command sent");
-    AC_ON = true;
-  }
-
-  else if (stopHour == currentHour && stopMin == currentMin && AC_ON == true) {
-    digitalWrite(GPIO_LED, LOW);
-    led1.off();
- //   rmt_example_nec_tx_task(); //sends IR start/stop command
-    Serial.println("IR command sent");
-    AC_ON = false;
-  }
 
 }
 
@@ -381,5 +358,21 @@ void loop()
 {
   Blynk.run();
   timer.run();
+
+  //Checks if it's time to turn on or off the AC
+  if (startHour == currentHour && startMin == currentMin && AC_ON == false) {
+    digitalWrite(GPIO_LED, HIGH);
+    led1.on();
+    rmt_example_nec_tx_task(); //sends IR start/stop command
+    Serial.println("IR command sent");
+    AC_ON = true;
+  }
+  else if (stopHour == currentHour && stopMin == currentMin && AC_ON == true) {
+    digitalWrite(GPIO_LED, LOW);
+    led1.off();
+    rmt_example_nec_tx_task(); //sends IR start/stop command
+    Serial.println("IR command sent");
+    AC_ON = false;
+  }
 
 }
